@@ -1,0 +1,20 @@
+schema: spec-driven
+
+context: |
+  Project: Fancy Restaurant Reservation System.
+  Stack: Python 3.10.4, Django, uv, pytest, Coverage.py, Black, Pylint.
+  Django structure: `config` is the project package and `reservations` is the registered reservation-domain app.
+  Domain: users reserve restaurant tables by guest count, date, and time slot. The system should assign the smallest available table that fits the party and suggest nearby alternatives when unavailable.
+  Conventions: keep reservation business rules out of views where practical; prefer app-level services/selectors for table assignment, availability checks, and suggestion logic.
+  Verification: run `uv run python manage.py check` and `uv run pytest` before handoff.
+  Git safety: do not overwrite unrelated changes, do not commit generated files, and do not push unless explicitly requested.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
