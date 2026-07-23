@@ -24,12 +24,24 @@ Users can enter the number of guests, choose a desired date and time slot, and c
 
 ## Basic Data Model Idea
 
-- Users store user information such as name and login information.
-- Tables have a table number and capacity.
-- Time slots represent available reservation times.
-- Reservations store the user name, date, time slot, number of guests, and assigned table.
+- Users use Django's built-in authentication model for login information.
+- Tables have a unique table number, seating capacity, and active status.
+- Time slots represent reusable available reservation start times, duration, and active status.
+- Reservations store an optional logged-in user, customer name, date, time slot, number of guests, assigned table, status, and timestamps.
 
 The system should choose the smallest available table that can fit the number of guests.
+
+The database prevents double-booking by requiring each assigned table to be unique for the same reservation date and time slot.
+
+## Initial Database Schema
+
+The `reservations` app defines these Django models:
+
+- `Table`: restaurant table records ordered by capacity and table number so later booking logic can find the smallest suitable table first.
+- `TimeSlot`: reusable reservation start times such as `18:00` or `19:30`.
+- `Reservation`: date-specific bookings connected to a time slot and assigned table.
+
+Each model implements `__str__()` so records are readable in Django admin.
 
 ## Main User Flow
 
@@ -70,3 +82,9 @@ Install dependencies using uv.
 
 ```bash
 uv sync
+uv run python manage.py check
+uv run python manage.py makemigrations reservations
+uv run python manage.py migrate
+uv run python manage.py test reservations
+uv run pytest
+```

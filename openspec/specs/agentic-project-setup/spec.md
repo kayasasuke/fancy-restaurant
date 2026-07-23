@@ -31,3 +31,9 @@ The project SHALL document uv-based verification commands for Django system chec
 - **WHEN** an AI agent prepares to hand off project changes
 - **THEN** it can find `uv run python manage.py check` and `uv run pytest` as the required verification commands
 
+### Requirement: Reservation database design is documented
+The project SHALL document the reservation database schema used by the Django app.
+
+#### Scenario: Developer inspects database design
+- **WHEN** a developer reads the project README or OpenSpec changes
+- **THEN** they can identify the `Table`, `TimeSlot`, and `Reservation` models and their main relationships
