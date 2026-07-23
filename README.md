@@ -26,12 +26,12 @@ Users can enter the number of guests, choose a desired date and time slot, and c
 
 - Users use Django's built-in authentication model for login information.
 - Tables have a unique table number, seating capacity, and active status.
-- Time slots represent reusable available reservation start times, duration, and active status.
+- Time slots represent reusable available reservation start times, duration, and active status. Active time slots must not overlap.
 - Reservations store an optional logged-in user, customer name, date, time slot, number of guests, assigned table, status, and timestamps.
 
 The system should choose the smallest available table that can fit the number of guests.
 
-The database prevents double-booking by requiring each assigned table to be unique for the same reservation date and time slot.
+The database prevents double-booking by requiring each assigned table to be unique for the same reservation date and active reservation time slot. Cancelled reservations do not block a replacement booking.
 
 ## Initial Database Schema
 

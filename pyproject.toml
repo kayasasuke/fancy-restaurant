@@ -14,4 +14,5 @@ dev = [
     "coverage>=7.15.0",
     "pylint>=4.0.6",
     "pytest>=9.1.1",
+    "pytest-django>=4.12.0",
 ]

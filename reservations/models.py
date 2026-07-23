@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -35,6 +36,34 @@ class TimeSlot(models.Model):
 
     def __str__(self) -> str:
         return self.start_time.strftime("%H:%M")
+
+    def clean(self) -> None:
+        super().clean()
+        if not self.is_active or not self.start_time or not self.duration_minutes:
+            return
+
+        start_minutes = self.start_time.hour * 60 + self.start_time.minute
+        end_minutes = start_minutes + self.duration_minutes
+        if end_minutes > 24 * 60:
+            raise ValidationError(
+                {"duration_minutes": "Time slots cannot extend past midnight."}
+            )
+
+        active_slots = TimeSlot.objects.filter(is_active=True)
+        if self.pk:
+            active_slots = active_slots.exclude(pk=self.pk)
+
+        for slot in active_slots:
+            slot_start = slot.start_time.hour * 60 + slot.start_time.minute
+            slot_end = slot_start + slot.duration_minutes
+            if start_minutes < slot_end and slot_start < end_minutes:
+                raise ValidationError(
+                    {"start_time": "Active time slots cannot overlap."}
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class Reservation(models.Model):
@@ -76,6 +105,7 @@ class Reservation(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["reservation_date", "time_slot", "table"],
+                condition=models.Q(status__in=["pending", "confirmed"]),
                 name="unique_reservation_table_slot",
             )
         ]
@@ -89,3 +119,18 @@ class Reservation(models.Model):
             f"{self.customer_name} on {self.reservation_date} "
             f"at {self.time_slot} - {self.table}"
         )
+
+    def clean(self) -> None:
+        super().clean()
+        if self.table_id and self.guest_count > self.table.capacity:
+            raise ValidationError(
+                {
+                    "guest_count": (
+                        "Guest count cannot exceed the assigned table capacity."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean(validate_constraints=False)
+        return super().save(*args, **kwargs)
