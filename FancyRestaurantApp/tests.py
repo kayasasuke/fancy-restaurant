@@ -1,4 +1,5 @@
 from datetime import date, time
+from importlib import import_module
 
 from django.test import TestCase
 from django.urls import reverse
@@ -7,6 +8,14 @@ from .models import Customer, Reservation, Table, TimeSlot
 
 
 class ReservationModelTests(TestCase):
+    def test_data_migration_rejects_customer_names_longer_than_twenty_characters(self):
+        migration = import_module(
+            "FancyRestaurantApp.migrations.0003_simplify_reservation_schema"
+        )
+
+        with self.assertRaises(RuntimeError):
+            migration.validated_customer_name("A" * 21)
+
     def test_customer_string_uses_name(self):
         customer = Customer.objects.create(name="Alice", login="alice", password="hash")
 
@@ -98,6 +107,17 @@ class ReservationViewTests(TestCase):
 
         reservation = Reservation.objects.get(customer__name="Alice")
         self.assertEqual(reservation.table, suitable_table)
+
+    def test_sample_reservation_create_allows_existing_duplicate_guest_names(self):
+        Customer.objects.create(name="Alice", login="", password="")
+        Customer.objects.create(name="Alice", login="", password="")
+        Table.objects.create(table_number=1, capacity=2)
+        self.create_sample_slot()
+
+        response = self.client.post(reverse("reservation-sample-create"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Reservation.objects.count(), 1)
 
     def test_sample_reservation_create_skips_already_reserved_table(self):
         reserved_table = Table.objects.create(table_number=1, capacity=2)

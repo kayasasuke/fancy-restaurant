@@ -2,13 +2,22 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def validated_customer_name(customer_name):
+    if len(customer_name) > 20:
+        raise RuntimeError(
+            "Cannot migrate a customer name longer than 20 characters. "
+            "Back up the database and shorten the name before applying this migration."
+        )
+    return customer_name
+
+
 def create_customers_for_existing_reservations(apps, schema_editor):
     Customer = apps.get_model("reservations", "Customer")
     Reservation = apps.get_model("reservations", "Reservation")
 
     for reservation in Reservation.objects.all():
         customer = Customer.objects.create(
-            name=reservation.customer_name[:20],
+            name=validated_customer_name(reservation.customer_name),
             login="",
             password="",
         )

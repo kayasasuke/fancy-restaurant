@@ -74,11 +74,9 @@ def create_sample_reservation(request):
     if table is None:
         return HttpResponse("No suitable table is available.", status=409)
 
-    customer, _created = Customer.objects.get_or_create(
-        name="Alice",
-        login="",
-        defaults={"password": ""},
-    )
+    customer = Customer.objects.filter(name="Alice", login="").first()
+    if customer is None:
+        customer = Customer.objects.create(name="Alice", login="", password="")
     reservation = Reservation.objects.create(
         customer=customer,
         reservation_date=reservation_date,

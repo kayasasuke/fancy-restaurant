@@ -44,6 +44,10 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
+### Migration Note
+
+The `0003_simplify_reservation_schema` migration intentionally removes the extended fields from the earlier local schema so that the database matches the introductory course design. Back up an existing database before applying it. Because the course-aligned `Customer.name` field is limited to 20 characters, the migration stops without changing the database if an old customer name is longer; shorten that data deliberately before retrying.
+
 ## Architecture Sketch
 
 ```mermaid

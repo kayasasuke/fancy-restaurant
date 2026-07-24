@@ -50,5 +50,5 @@ Existing migrations use the Django application label `reservations`, and local S
 2. Keep the app label `reservations` and run `showmigrations` against the existing database configuration.
 3. Update the sample reservation behavior and tests.
 4. Run Django checks, migrations checks, pytest, Black, Pylint, and OpenSpec validation.
-5. Apply the forward data migration, which creates a `Customer` for every existing reservation before obsolete reservation fields are removed.
+5. Back up the database, then apply the forward data migration. It creates a `Customer` for every existing reservation before obsolete fields are removed and stops if a legacy customer name exceeds the course-aligned 20-character limit.
 6. Roll back package renames from Git before deployment, or restore the database from backup if the schema migration must be reversed.
