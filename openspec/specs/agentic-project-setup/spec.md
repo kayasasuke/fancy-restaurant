@@ -1,14 +1,14 @@
 # agentic-project-setup Specification
 
 ## Purpose
-TBD - created by archiving change review-agentic-setup. Update Purpose after archive.
+Define the agent guidance and project tooling for the Fancy Restaurant Django application.
 ## Requirements
 ### Requirement: Agent guidance reflects current Django structure
-The project SHALL keep agent-facing guidance aligned with the current repository structure, including the `config` Django project and the registered `reservations` app.
+The project SHALL keep agent-facing guidance aligned with the current repository structure, including the `FancyRestaurant` Django project and the registered `FancyRestaurantApp` app with the stable `reservations` label.
 
 #### Scenario: Agent reads project context
 - **WHEN** an AI coding agent reads `AGENTS.md`
-- **THEN** it sees that `reservations` exists and is registered in `config/settings.py`
+- **THEN** it sees that `FancyRestaurantApp` implements the reservation domain and is registered in `FancyRestaurant/settings.py`
 
 ### Requirement: Agent setup includes reusable project skills
 The project SHALL store reviewed reusable AI skills in `.agents/skills` so future agents can inspect and use project-relevant guidance.
