@@ -3,6 +3,7 @@ from datetime import date, time
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+from django.urls import reverse
 
 from .models import Reservation, Table, TimeSlot
 
@@ -109,3 +110,76 @@ class ReservationModelTests(TestCase):
                 guest_count=3,
                 table=table,
             )
+
+
+class ReservationViewTests(TestCase):
+    def test_home_page_is_callable(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Fancy Restaurant Reservations")
+        self.assertContains(response, "/tables/")
+
+    def test_table_list_shows_active_tables(self):
+        Table.objects.create(table_number=3, capacity=4)
+        Table.objects.create(table_number=9, capacity=8, is_active=False)
+
+        response = self.client.get(reverse("table-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Table 3: 4 seats")
+        self.assertNotContains(response, "Table 9")
+
+    def test_time_slot_list_shows_active_slots(self):
+        TimeSlot.objects.create(start_time=time(18, 0), duration_minutes=90)
+        TimeSlot.objects.create(
+            start_time=time(20, 0),
+            duration_minutes=90,
+            is_active=False,
+        )
+
+        response = self.client.get(reverse("time-slot-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "18:00 for 90 minutes")
+        self.assertNotContains(response, "20:00")
+
+    def test_reservation_form_placeholder_is_callable(self):
+        response = self.client.get(reverse("reservation-form"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Reservation Form")
+        self.assertContains(response, "Alice, 2 guests, 2026-08-01, 18:00")
+
+    def test_sample_reservation_create_redirects_to_detail(self):
+        response = self.client.get(reverse("reservation-sample-create"))
+
+        reservation = Reservation.objects.get(customer_name="Alice")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"],
+            reverse("reservation-detail", args=[reservation.id]),
+        )
+
+    def test_reservation_detail_shows_existing_reservation(self):
+        table = Table.objects.create(table_number=1, capacity=2)
+        slot = TimeSlot.objects.create(start_time=time(18, 0), duration_minutes=90)
+        reservation = Reservation.objects.create(
+            customer_name="Alice",
+            reservation_date=date(2026, 8, 1),
+            time_slot=slot,
+            guest_count=2,
+            table=table,
+        )
+
+        response = self.client.get(reverse("reservation-detail", args=[reservation.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Customer: Alice")
+        self.assertContains(response, "Date: 2026-08-01")
+        self.assertContains(response, "Table: 1")
+
+    def test_reservation_detail_returns_404_for_missing_reservation(self):
+        response = self.client.get(reverse("reservation-detail", args=[999]))
+
+        self.assertEqual(response.status_code, 404)
