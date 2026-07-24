@@ -1,7 +1,13 @@
-## Purpose
-Define the initial Django database schema for the restaurant reservation domain.
+## ADDED Requirements
 
-## Requirements
+### Requirement: Customers are persisted
+The system SHALL persist restaurant customers with a name, login, and password value.
+
+#### Scenario: Admin views customer records
+- **WHEN** a customer record is listed in Django admin or the Django shell
+- **THEN** the object label includes the customer name
+
+## MODIFIED Requirements
 
 ### Requirement: Restaurant tables are persisted
 The system SHALL persist restaurant tables with a table number and seating capacity.
@@ -24,9 +30,12 @@ The system SHALL persist reservations with a customer, reservation date, time sl
 - **WHEN** a reservation record is listed in Django admin or the Django shell
 - **THEN** the object label identifies the customer, date, and assigned table
 
-### Requirement: Customers are persisted
-The system SHALL persist restaurant customers with a name, login, and password value.
+## REMOVED Requirements
 
-#### Scenario: Admin views customer records
-- **WHEN** a customer record is listed in Django admin or the Django shell
-- **THEN** the object label includes the customer name
+### Requirement: Double-booking is prevented
+**Reason**: Complete availability and cancellation rules are outside the introductory Exercise 5 schema.
+**Migration**: A later reservation-service exercise will introduce the required business rule and tests.
+
+### Requirement: Smallest-table assignment is supported by schema
+**Reason**: Table capacity and guest count remain available, but schema-level ordering and active-state requirements add unnecessary scope at this stage.
+**Migration**: Later booking logic can order tables when it implements the assignment workflow.

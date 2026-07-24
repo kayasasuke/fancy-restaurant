@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.middleware.csrf import get_token
 from django.utils.html import escape
 
-from .models import Reservation, Table, TimeSlot
+from .models import Customer, Reservation, Table, TimeSlot
 
 
 def home(request):
@@ -22,22 +22,19 @@ def home(request):
 
 
 def table_list(request):
-    tables = Table.objects.filter(is_active=True)
+    tables = Table.objects.all()
     rows = [
         f"<li>Table {table.table_number}: {table.capacity} seats</li>"
         for table in tables
     ]
-    content = "<h1>Active Tables</h1><ul>{}</ul>".format("".join(rows))
+    content = f"<h1>Restaurant Tables</h1><ul>{''.join(rows)}</ul>"
     return HttpResponse(content)
 
 
 def time_slot_list(request):
-    slots = TimeSlot.objects.filter(is_active=True)
-    rows = [
-        f"<li>{slot.start_time.strftime('%H:%M')} for {slot.duration_minutes} minutes</li>"
-        for slot in slots
-    ]
-    content = "<h1>Active Time Slots</h1><ul>{}</ul>".format("".join(rows))
+    slots = TimeSlot.objects.all()
+    rows = [f"<li>{slot.start_time.strftime('%H:%M')}</li>" for slot in slots]
+    content = f"<h1>Reservation Time Slots</h1><ul>{''.join(rows)}</ul>"
     return HttpResponse(content)
 
 
@@ -58,30 +55,30 @@ def create_sample_reservation(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
-    slot, _created = TimeSlot.objects.get_or_create(
-        start_time=time(18, 0),
-        defaults={"duration_minutes": 90},
-    )
+    slot = TimeSlot.objects.filter(start_time=time(18, 0)).first()
+    if slot is None:
+        return HttpResponse("The sample time slot is unavailable.", status=409)
     reservation_date = date(2026, 8, 1)
 
     occupied_table_ids = Reservation.objects.filter(
         reservation_date=reservation_date,
         time_slot=slot,
-        status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED],
     ).values_list("table_id", flat=True)
 
     table = (
-        Table.objects.filter(is_active=True, capacity__gte=2)
+        Table.objects.filter(capacity__gte=2)
         .exclude(id__in=occupied_table_ids)
+        .order_by("capacity", "table_number")
         .first()
     )
     if table is None:
-        latest_table = Table.objects.order_by("-table_number").first()
-        table_number = latest_table.table_number + 1 if latest_table else 1
-        table = Table.objects.create(table_number=table_number, capacity=2)
+        return HttpResponse("No suitable table is available.", status=409)
 
+    customer = Customer.objects.filter(name="Alice", login="").first()
+    if customer is None:
+        customer = Customer.objects.create(name="Alice", login="", password="")
     reservation = Reservation.objects.create(
-        customer_name="Alice",
+        customer=customer,
         reservation_date=reservation_date,
         time_slot=slot,
         guest_count=2,
@@ -92,16 +89,15 @@ def create_sample_reservation(request):
 
 def reservation_detail(request, reservation_id):
     reservation = get_object_or_404(
-        Reservation.objects.select_related("time_slot", "table"),
+        Reservation.objects.select_related("customer", "time_slot", "table"),
         pk=reservation_id,
     )
     return HttpResponse(f"""
         <h1>Reservation Detail</h1>
-        <p>Customer: {escape(reservation.customer_name)}</p>
+        <p>Customer: {escape(reservation.customer.name)}</p>
         <p>Date: {reservation.reservation_date}</p>
         <p>Time: {reservation.time_slot.start_time.strftime('%H:%M')}</p>
         <p>Guests: {reservation.guest_count}</p>
         <p>Table: {reservation.table.table_number}</p>
-        <p>Status: {reservation.get_status_display()}</p>
         <p><a href="{reverse('home')}">Back home</a></p>
         """)
