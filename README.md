@@ -64,15 +64,15 @@ Each model implements `__str__()` so records are readable in Django admin.
 
 ## Current URL API
 
-The current Exercise 6 views are intentionally simple function-based views. They return basic HTML with `HttpResponse`; the sample reservation action uses hard-coded values and redirects to a detail page.
+The current Exercise 6 views are intentionally simple function-based views. They return basic HTML with `HttpResponse`; the sample reservation POST action uses hard-coded values and redirects to a detail page.
 
 | URL | View name | Arguments | Return value | Purpose |
 | --- | --- | --- | --- | --- |
 | `/` | `home` | none | `200 OK` HTML | Show the home page and links to basic actions. |
 | `/tables/` | `table-list` | none | `200 OK` HTML | Show active restaurant tables ordered by capacity and table number. |
 | `/time-slots/` | `time-slot-list` | none | `200 OK` HTML | Show active reservation time slots ordered by start time. |
-| `/reservations/new/` | `reservation-form` | none | `200 OK` HTML | Show a placeholder reservation form page with current hard-coded sample values. |
-| `/reservations/sample-create/` | `reservation-sample-create` | none | `302 Found` redirect | Create a sample reservation for Alice, 2 guests, 2026-08-01 at 18:00, then redirect to its detail page. |
+| `/reservations/new/` | `reservation-form` | none | `200 OK` HTML | Show a placeholder reservation form page with current hard-coded sample values and a POST button. |
+| `/reservations/sample-create/` | `reservation-sample-create` | none | `302 Found` redirect for `POST`; `405 Method Not Allowed` for `GET` | Create a sample reservation for Alice, 2 guests, 2026-08-01 at 18:00, then redirect to its detail page. |
 | `/reservations/<reservation_id>/` | `reservation-detail` | integer `reservation_id` | `200 OK` HTML or `404 Not Found` | Show one reservation's customer, date, time, guest count, table, and status. |
 
 Later exercises should replace the hard-coded sample action with real form input and complete availability logic.

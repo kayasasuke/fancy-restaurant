@@ -150,9 +150,16 @@ class ReservationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Reservation Form")
         self.assertContains(response, "Alice, 2 guests, 2026-08-01, 18:00")
+        self.assertContains(response, 'method="post"')
 
-    def test_sample_reservation_create_redirects_to_detail(self):
+    def test_sample_reservation_create_rejects_get(self):
         response = self.client.get(reverse("reservation-sample-create"))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(Reservation.objects.filter(customer_name="Alice").exists())
+
+    def test_sample_reservation_create_redirects_to_detail_on_post(self):
+        response = self.client.post(reverse("reservation-sample-create"))
 
         reservation = Reservation.objects.get(customer_name="Alice")
         self.assertEqual(response.status_code, 302)
@@ -160,6 +167,35 @@ class ReservationViewTests(TestCase):
             response["Location"],
             reverse("reservation-detail", args=[reservation.id]),
         )
+
+    def test_sample_reservation_create_uses_suitable_existing_table(self):
+        small_table = Table.objects.create(table_number=1, capacity=1)
+        suitable_table = Table.objects.create(table_number=2, capacity=2)
+
+        response = self.client.post(reverse("reservation-sample-create"))
+
+        reservation = Reservation.objects.get(customer_name="Alice")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(reservation.table, suitable_table)
+        self.assertNotEqual(reservation.table, small_table)
+
+    def test_sample_reservation_create_skips_already_reserved_table(self):
+        reserved_table = Table.objects.create(table_number=1, capacity=2)
+        available_table = Table.objects.create(table_number=2, capacity=2)
+        slot = TimeSlot.objects.create(start_time=time(18, 0), duration_minutes=90)
+        Reservation.objects.create(
+            customer_name="Bob",
+            reservation_date=date(2026, 8, 1),
+            time_slot=slot,
+            guest_count=2,
+            table=reserved_table,
+        )
+
+        response = self.client.post(reverse("reservation-sample-create"))
+
+        reservation = Reservation.objects.get(customer_name="Alice")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(reservation.table, available_table)
 
     def test_reservation_detail_shows_existing_reservation(self):
         table = Table.objects.create(table_number=1, capacity=2)
@@ -178,6 +214,25 @@ class ReservationViewTests(TestCase):
         self.assertContains(response, "Customer: Alice")
         self.assertContains(response, "Date: 2026-08-01")
         self.assertContains(response, "Table: 1")
+
+    def test_reservation_detail_escapes_customer_name(self):
+        table = Table.objects.create(table_number=1, capacity=2)
+        slot = TimeSlot.objects.create(start_time=time(18, 0), duration_minutes=90)
+        reservation = Reservation.objects.create(
+            customer_name="<script>alert('xss')</script>",
+            reservation_date=date(2026, 8, 1),
+            time_slot=slot,
+            guest_count=2,
+            table=table,
+        )
+
+        response = self.client.get(reverse("reservation-detail", args=[reservation.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+        )
+        self.assertNotContains(response, "<script>alert('xss')</script>")
 
     def test_reservation_detail_returns_404_for_missing_reservation(self):
         response = self.client.get(reverse("reservation-detail", args=[999]))

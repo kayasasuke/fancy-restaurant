@@ -29,11 +29,15 @@ The system SHALL expose a URL representing the future reservation form page.
 - **THEN** the system returns a successful response showing the currently hard-coded sample reservation values
 
 ### Requirement: Sample reservation creation redirects
-The system SHALL expose a URL that creates a simple sample reservation and redirects to its detail page.
+The system SHALL expose a URL that creates a simple sample reservation on POST and redirects to its detail page.
 
 #### Scenario: Visitor creates sample reservation
-- **WHEN** a visitor requests `/reservations/sample-create/`
+- **WHEN** a visitor sends a POST request to `/reservations/sample-create/`
 - **THEN** the system creates a reservation with hard-coded sample values and redirects to `/reservations/<id>/`
+
+#### Scenario: Visitor opens sample creation URL with GET
+- **WHEN** a visitor sends a GET request to `/reservations/sample-create/`
+- **THEN** the system returns a 405 response and does not create a reservation
 
 ### Requirement: Reservation detail is callable
 The system SHALL expose a URL that shows one reservation by ID.
