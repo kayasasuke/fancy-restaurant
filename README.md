@@ -17,31 +17,45 @@ Users can enter the number of guests, choose a desired date and time slot, and c
 
 ## Main Data Entities
 
-- User
+- Customer
 - Table
 - Reservation
 - Time Slot
 
 ## Basic Data Model Idea
 
-- Users use Django's built-in authentication model for login information.
-- Tables have a unique table number, seating capacity, and active status.
-- Time slots represent reusable available reservation start times, duration, and active status. Active time slots must not overlap.
-- Reservations store an optional logged-in user, customer name, date, time slot, number of guests, assigned table, status, and timestamps.
+- Customers store a name, login name, and password value. Login processing is introduced in a later exercise.
+- Tables have a table number and seating capacity.
+- Time slots represent reusable reservation start times.
+- Reservations connect one customer, reservation date, time slot, guest count, and assigned table.
 
 The system should choose the smallest available table that can fit the number of guests.
 
-The database prevents double-booking by requiring each assigned table to be unique for the same reservation date and active reservation time slot. Cancelled reservations do not block a replacement booking.
+Later exercises will add complete availability validation, cancellation handling, and nearby-slot suggestions.
 
 ## Initial Database Schema
 
 The `reservations` app defines these Django models:
 
-- `Table`: restaurant table records ordered by capacity and table number so later booking logic can find the smallest suitable table first.
+- `Customer`: the restaurant application's customer record, corresponding to `Patient` in the instructor's Dentistry example.
+- `Table`: restaurant table records with a number and seating capacity.
 - `TimeSlot`: reusable reservation start times such as `18:00` or `19:30`.
-- `Reservation`: date-specific bookings connected to a time slot and assigned table.
+- `Reservation`: date-specific bookings connected to a customer, time slot, and assigned table.
 
 Each model implements `__str__()` so records are readable in Django admin.
+
+## Architecture Sketch
+
+```mermaid
+flowchart LR
+    Browser[Browser]
+    Django[FancyRestaurant views and services]
+    Database[(SQLite database)]
+
+    Browser -->|HTTP request| Django
+    Django -->|HTML response| Browser
+    Django <-->|Django ORM| Database
+```
 
 ## Main User Flow
 
@@ -66,14 +80,14 @@ Each model implements `__str__()` so records are readable in Django admin.
 
 The current Exercise 6 views are intentionally simple function-based views. They return basic HTML with `HttpResponse`; the sample reservation POST action uses hard-coded values and redirects to a detail page.
 
-| URL | View name | Arguments | Return value | Purpose |
-| --- | --- | --- | --- | --- |
-| `/` | `home` | none | `200 OK` HTML | Show the home page and links to basic actions. |
-| `/tables/` | `table-list` | none | `200 OK` HTML | Show active restaurant tables ordered by capacity and table number. |
-| `/time-slots/` | `time-slot-list` | none | `200 OK` HTML | Show active reservation time slots ordered by start time. |
-| `/reservations/new/` | `reservation-form` | none | `200 OK` HTML | Show a placeholder reservation form page with current hard-coded sample values and a POST button. |
-| `/reservations/sample-create/` | `reservation-sample-create` | none | `302 Found` redirect for `POST`; `405 Method Not Allowed` for `GET` | Create a sample reservation for Alice, 2 guests, 2026-08-01 at 18:00, then redirect to its detail page. |
-| `/reservations/<reservation_id>/` | `reservation-detail` | integer `reservation_id` | `200 OK` HTML or `404 Not Found` | Show one reservation's customer, date, time, guest count, table, and status. |
+| URL | View name | URL arguments | Request parameters | Return value | Purpose |
+| --- | --- | --- | --- | --- | --- |
+| `/` | `home` | none | none | `200 OK` HTML | Show the home page and links to basic actions. |
+| `/tables/` | `table-list` | none | none | `200 OK` HTML | Show restaurant tables ordered by capacity and table number. |
+| `/time-slots/` | `time-slot-list` | none | none | `200 OK` HTML | Show reservation time slots ordered by start time. |
+| `/reservations/new/` | `reservation-form` | none | none | `200 OK` HTML | Show a placeholder reservation form page with current hard-coded sample values and a POST button. |
+| `/reservations/sample-create/` | `reservation-sample-create` | none | none; current values are hard-coded | `302 Found` for an available table; `409 Conflict` when no suitable table or the sample time slot is unavailable; `405 Method Not Allowed` for `GET` | Create a sample reservation for Alice, 2 guests, 2026-08-01 at 18:00, then redirect to its detail page. |
+| `/reservations/<reservation_id>/` | `reservation-detail` | integer `reservation_id` | none | `200 OK` HTML or `404 Not Found` | Show one reservation's customer, date, time, guest count, and table. |
 
 Later exercises should replace the hard-coded sample action with real form input and complete availability logic.
 
