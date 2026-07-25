@@ -1,8 +1,6 @@
-from datetime import date, time
-
-from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
+from .forms import ReservationForm
 from .models import Customer, Reservation, Table, TimeSlot
 
 
@@ -21,43 +19,44 @@ def time_slot_list(request):
 
 
 def reservation_form(request):
-    return render(request, "FancyRestaurantApp/reservation_form.html")
+    time_slots = TimeSlot.objects.order_by("start_time")
+    if request.method == "POST":
+        form = ReservationForm(request.POST, time_slots=time_slots)
+    else:
+        form = ReservationForm(time_slots=time_slots)
 
+    if request.method == "POST" and form.is_valid():
+        reservation_date = form.cleaned_data["reservation_date"]
+        time_slot = TimeSlot.objects.get(pk=form.cleaned_data["time_slot"])
+        guest_count = form.cleaned_data["guest_count"]
+        occupied_table_ids = Reservation.objects.filter(
+            reservation_date=reservation_date,
+            time_slot=time_slot,
+        ).values_list("table_id", flat=True)
+        table = (
+            Table.objects.filter(capacity__gte=guest_count)
+            .exclude(id__in=occupied_table_ids)
+            .order_by("capacity", "table_number")
+            .first()
+        )
+        if table is None:
+            form.add_error(None, "No suitable table is available.")
+        else:
+            customer = Customer.objects.create(
+                name=form.cleaned_data["customer_name"],
+                login="",
+                password="",
+            )
+            reservation = Reservation.objects.create(
+                customer=customer,
+                reservation_date=reservation_date,
+                time_slot=time_slot,
+                guest_count=guest_count,
+                table=table,
+            )
+            return redirect("reservation-detail", reservation_id=reservation.id)
 
-def create_sample_reservation(request):
-    if request.method != "POST":
-        return HttpResponseNotAllowed(["POST"])
-
-    slot = TimeSlot.objects.filter(start_time=time(18, 0)).first()
-    if slot is None:
-        return HttpResponse("The sample time slot is unavailable.", status=409)
-    reservation_date = date(2026, 8, 1)
-
-    occupied_table_ids = Reservation.objects.filter(
-        reservation_date=reservation_date,
-        time_slot=slot,
-    ).values_list("table_id", flat=True)
-
-    table = (
-        Table.objects.filter(capacity__gte=2)
-        .exclude(id__in=occupied_table_ids)
-        .order_by("capacity", "table_number")
-        .first()
-    )
-    if table is None:
-        return HttpResponse("No suitable table is available.", status=409)
-
-    customer = Customer.objects.filter(name="Alice", login="").first()
-    if customer is None:
-        customer = Customer.objects.create(name="Alice", login="", password="")
-    reservation = Reservation.objects.create(
-        customer=customer,
-        reservation_date=reservation_date,
-        time_slot=slot,
-        guest_count=2,
-        table=table,
-    )
-    return redirect("reservation-detail", reservation_id=reservation.id)
+    return render(request, "FancyRestaurantApp/reservation_form.html", {"form": form})
 
 
 def reservation_detail(request, reservation_id):

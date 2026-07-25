@@ -44,11 +44,13 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
-## Exercise 7 State and Template Design
+## Exercise 8 State, Templates, And Form Design
 
-Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Ex7 has no user input or login yet, so it documents this session boundary without adding a contrived session write to the hard-coded sample reservation.
+Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Exercise 8 accepts a guest name directly, so it does not introduce session state.
 
-All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base template contains the restaurant header, navigation menu, main-content area, and footer. Home, table list, time-slot list, reservation placeholder, and reservation detail templates inherit that layout. Forms, login, CSS, HTMX, and full availability logic remain later exercises.
+All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base template contains the restaurant header, navigation menu, main-content area, and footer. Home, table list, time-slot list, reservation form, and reservation detail templates inherit that layout.
+
+Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid submission creates a guest `Customer` with an empty login and password (matching the instructor example's guest reservation approach) and assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Login, registration, CSS, HTMX, alternative-time suggestions, and concurrent booking protection remain later exercises.
 
 ### Migration Note
 
@@ -88,18 +90,17 @@ flowchart LR
 
 ## Current URL API
 
-The current Exercise 7 views are intentionally simple function-based views. They render Django templates; the sample reservation POST action still uses hard-coded values and redirects to a detail page.
+The current Exercise 8 views are intentionally simple function-based views. The reservation form accepts basic user input and redirects to a detail page after a successful booking.
 
 | URL | View name | URL arguments | Request parameters | Return value | Purpose |
 | --- | --- | --- | --- | --- | --- |
 | `/` | `home` | none | none | `200 OK` HTML | Show the home page and links to basic actions. |
 | `/tables/` | `table-list` | none | none | `200 OK` HTML | Show restaurant tables ordered by capacity and table number. |
 | `/time-slots/` | `time-slot-list` | none | none | `200 OK` HTML | Show reservation time slots ordered by start time. |
-| `/reservations/new/` | `reservation-form` | none | none | `200 OK` HTML | Show a placeholder reservation form page with current hard-coded sample values and a POST button. |
-| `/reservations/sample-create/` | `reservation-sample-create` | none | none; current values are hard-coded | `302 Found` for an available table; `409 Conflict` when no suitable table or the sample time slot is unavailable; `405 Method Not Allowed` for `GET` | Create a sample reservation for Alice, 2 guests, 2026-08-01 at 18:00, then redirect to its detail page. |
+| `/reservations/new/` | `reservation-form` | none | `GET`: none. `POST`: `customer_name`, `guest_count`, `reservation_date` (`YYYY-MM-DD`), and `time_slot` (time-slot ID). | `GET`: `200 OK` HTML. Valid `POST`: `302 Found` to the reservation detail. Invalid or unavailable `POST`: `200 OK` HTML with errors. | Display and process the basic reservation form. A successful booking receives the smallest unoccupied existing table that fits the party. |
 | `/reservations/<reservation_id>/` | `reservation-detail` | integer `reservation_id` | none | `200 OK` HTML or `404 Not Found` | Show one reservation's customer, date, time, guest count, and table. |
 
-Later exercises should replace the hard-coded sample action with real form input and complete availability logic.
+Later exercises add login, richer availability checks, and nearby-time suggestions.
 
 ## Development Environment
 
