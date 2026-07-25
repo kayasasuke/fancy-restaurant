@@ -44,13 +44,15 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
-## Exercise 8 State, Templates, And Form Design
+## Exercise 9 Interface Design
 
 Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Exercise 8 accepts a guest name directly, so it does not introduce session state.
 
 All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base template contains the restaurant header, navigation menu, main-content area, and footer. Home, table list, time-slot list, reservation form, and reservation detail templates inherit that layout.
 
-Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid submission creates a guest `Customer` with an empty login and password (matching the instructor example's guest reservation approach) and assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Login, registration, CSS, HTMX, alternative-time suggestions, and concurrent booking protection remain later exercises.
+Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid submission creates a guest `Customer` with an empty login and password (matching the instructor example's guest reservation approach) and assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Login, HTMX, alternative-time suggestions, and concurrent booking protection remain later exercises.
+
+Exercise 9 adds one external stylesheet at `FancyRestaurantApp/static/FancyRestaurantApp/style.css`. The shared template loads it for every page and includes a viewport declaration. The CSS keeps the existing semantic header, navigation, main content, footer, labels, controls, and buttons; it adds a restrained responsive layout, visible keyboard focus, and readable validation-error styling. HTMX, JavaScript, images, and interface redesign remain outside this exercise.
 
 ### Migration Note
 

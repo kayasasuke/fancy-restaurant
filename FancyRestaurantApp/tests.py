@@ -57,6 +57,11 @@ class ReservationViewTests(TestCase):
         self.assertTemplateUsed(response, "FancyRestaurantApp/home.html")
         self.assertContains(response, "Fancy Restaurant Reservations")
         self.assertContains(response, "Fancy Restaurant Reservation System")
+        self.assertContains(
+            response,
+            'name="viewport" content="width=device-width, initial-scale=1"',
+        )
+        self.assertContains(response, "FancyRestaurantApp/style.css")
 
     def test_table_list_shows_tables(self):
         Table.objects.create(table_number=3, capacity=4)
