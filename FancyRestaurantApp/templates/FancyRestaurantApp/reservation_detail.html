@@ -1,0 +1,13 @@
+{% extends "FancyRestaurantApp/base.html" %}
+
+{% block title %}Reservation Detail{% endblock %}
+
+{% block content %}
+    <h2>Reservation Detail</h2>
+    <p>Customer: {{ reservation.customer.name }}</p>
+    <p>Date: {{ reservation.reservation_date|date:"Y-m-d" }}</p>
+    <p>Time: {{ reservation.time_slot.start_time|time:"H:i" }}</p>
+    <p>Guests: {{ reservation.guest_count }}</p>
+    <p>Table: {{ reservation.table.table_number }}</p>
+    <p><a href="{% url 'home' %}">Back home</a></p>
+{% endblock %}

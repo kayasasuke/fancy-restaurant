@@ -44,6 +44,12 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
+## Exercise 7 State and Template Design
+
+Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Ex7 has no user input or login yet, so it documents this session boundary without adding a contrived session write to the hard-coded sample reservation.
+
+All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base template contains the restaurant header, navigation menu, main-content area, and footer. Home, table list, time-slot list, reservation placeholder, and reservation detail templates inherit that layout. Forms, login, CSS, HTMX, and full availability logic remain later exercises.
+
 ### Migration Note
 
 The `0003_simplify_reservation_schema` migration intentionally removes the extended fields from the earlier local schema so that the database matches the introductory course design. Back up an existing database before applying it. Because the course-aligned `Customer.name` field is limited to 20 characters, the migration stops without changing the database if an old customer name is longer; shorten that data deliberately before retrying.
@@ -82,7 +88,7 @@ flowchart LR
 
 ## Current URL API
 
-The current Exercise 6 views are intentionally simple function-based views. They return basic HTML with `HttpResponse`; the sample reservation POST action uses hard-coded values and redirects to a detail page.
+The current Exercise 7 views are intentionally simple function-based views. They render Django templates; the sample reservation POST action still uses hard-coded values and redirects to a detail page.
 
 | URL | View name | URL arguments | Request parameters | Return value | Purpose |
 | --- | --- | --- | --- | --- | --- |
