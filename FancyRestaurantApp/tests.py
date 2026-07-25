@@ -62,6 +62,7 @@ class ReservationViewTests(TestCase):
             'name="viewport" content="width=device-width, initial-scale=1"',
         )
         self.assertContains(response, "FancyRestaurantApp/style.css")
+        self.assertContains(response, "FancyRestaurantApp/htmx.min.js")
 
     def test_table_list_shows_tables(self):
         Table.objects.create(table_number=3, capacity=4)
@@ -93,6 +94,65 @@ class ReservationViewTests(TestCase):
         self.assertContains(response, 'name="guest_count"')
         self.assertContains(response, 'name="reservation_date"')
         self.assertContains(response, f'value="{slot.id}"')
+        self.assertContains(response, 'hx-post="/reservations/availability/"')
+        self.assertContains(response, 'id="availability-result"')
+
+    def test_reservation_availability_shows_smallest_available_table(self):
+        Table.objects.create(table_number=1, capacity=4)
+        suitable_table = Table.objects.create(table_number=2, capacity=2)
+        slot = self.create_sample_slot()
+
+        response = self.client.post(
+            reverse("reservation-availability"),
+            {
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/availability_result.html")
+        self.assertContains(response, "Table 2 (2 seats) is available.")
+        self.assertFalse(Customer.objects.exists())
+        self.assertFalse(Reservation.objects.exists())
+        self.assertEqual(Table.objects.get(pk=suitable_table.pk), suitable_table)
+
+    def test_reservation_availability_reports_when_no_table_is_suitable(self):
+        slot = self.create_sample_slot()
+
+        response = self.client.post(
+            reverse("reservation-availability"),
+            {
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No suitable table is available.")
+        self.assertFalse(Customer.objects.exists())
+        self.assertFalse(Reservation.objects.exists())
+
+    def test_reservation_availability_returns_empty_fragment_for_invalid_input(self):
+        response = self.client.post(
+            reverse("reservation-availability"),
+            {"guest_count": 0},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.strip(), b"")
+        self.assertFalse(Customer.objects.exists())
+        self.assertFalse(Reservation.objects.exists())
+
+    def test_reservation_availability_rejects_get(self):
+        response = self.client.get(reverse("reservation-availability"))
+
+        self.assertEqual(response.status_code, 405)
 
     def test_reservation_form_creates_reservation_and_redirects(self):
         Table.objects.create(table_number=1, capacity=2)

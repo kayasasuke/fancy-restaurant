@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Fancy Restaurant Reservations{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'FancyRestaurantApp/style.css' %}">
+    <script src="{% static 'FancyRestaurantApp/htmx.min.js' %}" defer></script>
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <header>
         <h1><a href="{% url 'home' %}">Fancy Restaurant Reservations</a></h1>
         <nav aria-label="Main navigation">

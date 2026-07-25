@@ -44,7 +44,7 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
-## Exercise 9 Interface Design
+## Exercise 10 HTMX Availability Check
 
 Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Exercise 8 accepts a guest name directly, so it does not introduce session state.
 
@@ -52,7 +52,9 @@ All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base
 
 Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid submission creates a guest `Customer` with an empty login and password (matching the instructor example's guest reservation approach) and assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Login, HTMX, alternative-time suggestions, and concurrent booking protection remain later exercises.
 
-Exercise 9 adds one external stylesheet at `FancyRestaurantApp/static/FancyRestaurantApp/style.css`. The shared template loads it for every page and includes a viewport declaration. The CSS keeps the existing semantic header, navigation, main content, footer, labels, controls, and buttons; it adds a restrained responsive layout, visible keyboard focus, and readable validation-error styling. HTMX, JavaScript, images, and interface redesign remain outside this exercise.
+Exercise 9 adds one external stylesheet at `FancyRestaurantApp/static/FancyRestaurantApp/style.css`. The shared template loads it for every page and includes a viewport declaration. The CSS keeps the existing semantic header, navigation, main content, footer, labels, controls, and buttons; it adds a restrained responsive layout, visible keyboard focus, and readable validation-error styling. Images and interface redesign remain outside this exercise.
+
+Exercise 10 adds one HTMX interaction to the reservation form. When the guest count, date, or time slot changes, the browser sends the complete form data to a read-only availability URL and replaces only the form's availability-result region. The response identifies the smallest suitable unoccupied table, reports that no table is suitable, or remains empty while the relevant input is incomplete. The final reservation submission remains the normal form POST and redirect workflow.
 
 ### Migration Note
 
@@ -92,7 +94,7 @@ flowchart LR
 
 ## Current URL API
 
-The current Exercise 8 views are intentionally simple function-based views. The reservation form accepts basic user input and redirects to a detail page after a successful booking.
+The current Exercise 10 views are intentionally simple function-based views. The reservation form accepts basic user input and redirects to a detail page after a successful booking; HTMX adds a separate read-only availability query.
 
 | URL | View name | URL arguments | Request parameters | Return value | Purpose |
 | --- | --- | --- | --- | --- | --- |
@@ -100,6 +102,7 @@ The current Exercise 8 views are intentionally simple function-based views. The 
 | `/tables/` | `table-list` | none | none | `200 OK` HTML | Show restaurant tables ordered by capacity and table number. |
 | `/time-slots/` | `time-slot-list` | none | none | `200 OK` HTML | Show reservation time slots ordered by start time. |
 | `/reservations/new/` | `reservation-form` | none | `GET`: none. `POST`: `customer_name`, `guest_count`, `reservation_date` (`YYYY-MM-DD`), and `time_slot` (time-slot ID). | `GET`: `200 OK` HTML. Valid `POST`: `302 Found` to the reservation detail. Invalid or unavailable `POST`: `200 OK` HTML with errors. | Display and process the basic reservation form. A successful booking receives the smallest unoccupied existing table that fits the party. |
+| `/reservations/availability/` | `reservation-availability` | none | `POST`: `guest_count`, `reservation_date` (`YYYY-MM-DD`), and `time_slot` (time-slot ID). | `200 OK` HTML fragment; `405 Method Not Allowed` for `GET`. | Return availability for HTMX to replace the form result region. This creates no customer or reservation. |
 | `/reservations/<reservation_id>/` | `reservation-detail` | integer `reservation_id` | none | `200 OK` HTML or `404 Not Found` | Show one reservation's customer, date, time, guest count, and table. |
 
 Later exercises add login, richer availability checks, and nearby-time suggestions.

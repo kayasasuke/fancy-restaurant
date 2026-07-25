@@ -1,0 +1,5 @@
+{% if table %}
+    <p>Table {{ table.table_number }} ({{ table.capacity }} seats) is available.</p>
+{% elif unavailable %}
+    <p>No suitable table is available.</p>
+{% endif %}
