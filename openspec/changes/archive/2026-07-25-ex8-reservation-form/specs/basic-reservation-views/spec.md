@@ -3,7 +3,7 @@
 ### Requirement: Reservation form placeholder is callable
 The system SHALL expose a template-rendered reservation form at `/reservations/new/` that accepts GET to display the form and POST to process visitor input.
 
-#### Scenario: Visitor opens reservation form
+#### Scenario: Visitor opens reservation form placeholder
 - **WHEN** a visitor sends a GET request to `/reservations/new/`
 - **THEN** the system returns a successful template-rendered response with the reservation input form
 

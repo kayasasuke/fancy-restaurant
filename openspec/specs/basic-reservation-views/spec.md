@@ -23,26 +23,15 @@ The system SHALL expose a template-rendered URL that lists reservation time slot
 - **THEN** the system returns a successful template-rendered response containing time slot records ordered by start time
 
 ### Requirement: Reservation form placeholder is callable
-The system SHALL expose a template-rendered URL representing the future reservation form page.
+The system SHALL expose a template-rendered reservation form at `/reservations/new/` that accepts GET to display the form and POST to process visitor input.
 
 #### Scenario: Visitor opens reservation form placeholder
-- **WHEN** a visitor requests `/reservations/new/`
-- **THEN** the system returns a successful template-rendered response showing the currently hard-coded sample reservation values
+- **WHEN** a visitor sends a GET request to `/reservations/new/`
+- **THEN** the system returns a successful template-rendered response with the reservation input form
 
-### Requirement: Sample reservation creation redirects
-The system SHALL expose a URL that creates a simple sample reservation on POST and redirects to its detail page when a suitable table exists. It MUST NOT create new restaurant tables as part of this action.
-
-#### Scenario: Visitor creates sample reservation
-- **WHEN** a visitor sends a POST request to `/reservations/sample-create/` and a suitable table is available
-- **THEN** the system creates a reservation with hard-coded sample values and redirects to `/reservations/<id>/`
-
-#### Scenario: Visitor opens sample creation URL with GET
-- **WHEN** a visitor sends a GET request to `/reservations/sample-create/`
-- **THEN** the system returns a 405 response and does not create a reservation
-
-#### Scenario: No suitable table is available
-- **WHEN** a visitor sends a POST request to `/reservations/sample-create/` and no table can accommodate the sample party
-- **THEN** the system returns `409 Conflict` and creates neither a table nor a reservation
+#### Scenario: Visitor submits reservation form
+- **WHEN** a visitor sends a POST request to `/reservations/new/`
+- **THEN** the system validates the submitted reservation input and either redirects to the created reservation or re-renders the form with errors
 
 ### Requirement: Reservation detail is callable
 The system SHALL expose a template-rendered URL that shows one reservation by ID.
