@@ -76,25 +76,32 @@ class ReservationViewTests(TestCase):
         self.assertTemplateUsed(response, "FancyRestaurantApp/time_slot_list.html")
         self.assertContains(response, "18:00")
 
-    def test_reservation_form_placeholder_is_callable(self):
+    def test_reservation_form_displays_input_fields(self):
+        slot = self.create_sample_slot()
+
         response = self.client.get(reverse("reservation-form"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "FancyRestaurantApp/reservation_form.html")
         self.assertContains(response, "Reservation Form")
-        self.assertContains(response, 'method="post"')
+        self.assertContains(response, 'name="customer_name"')
+        self.assertContains(response, 'name="guest_count"')
+        self.assertContains(response, 'name="reservation_date"')
+        self.assertContains(response, f'value="{slot.id}"')
 
-    def test_sample_reservation_create_rejects_get(self):
-        response = self.client.get(reverse("reservation-sample-create"))
-
-        self.assertEqual(response.status_code, 405)
-        self.assertFalse(Reservation.objects.exists())
-
-    def test_sample_reservation_create_redirects_to_detail_on_post(self):
+    def test_reservation_form_creates_reservation_and_redirects(self):
         Table.objects.create(table_number=1, capacity=2)
-        self.create_sample_slot()
+        slot = self.create_sample_slot()
 
-        response = self.client.post(reverse("reservation-sample-create"))
+        response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
 
         reservation = Reservation.objects.get(customer__name="Alice")
         self.assertEqual(response.status_code, 302)
@@ -103,28 +110,53 @@ class ReservationViewTests(TestCase):
             reverse("reservation-detail", args=[reservation.id]),
         )
 
-    def test_sample_reservation_create_uses_smallest_suitable_table(self):
+    def test_reservation_form_uses_smallest_suitable_table(self):
         Table.objects.create(table_number=1, capacity=4)
         suitable_table = Table.objects.create(table_number=2, capacity=2)
-        self.create_sample_slot()
+        slot = self.create_sample_slot()
 
-        self.client.post(reverse("reservation-sample-create"))
+        self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
 
         reservation = Reservation.objects.get(customer__name="Alice")
         self.assertEqual(reservation.table, suitable_table)
 
-    def test_sample_reservation_create_allows_existing_duplicate_guest_names(self):
-        Customer.objects.create(name="Alice", login="", password="")
-        Customer.objects.create(name="Alice", login="", password="")
-        Table.objects.create(table_number=1, capacity=2)
-        self.create_sample_slot()
+    def test_reservation_form_rejects_invalid_input_without_creating_records(self):
+        slot = self.create_sample_slot()
 
-        response = self.client.post(reverse("reservation-sample-create"))
+        response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 0,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
 
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(Reservation.objects.count(), 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Ensure this value is greater than or equal to 1."
+        )
+        self.assertFalse(Customer.objects.exists())
+        self.assertFalse(Reservation.objects.exists())
 
-    def test_sample_reservation_create_skips_already_reserved_table(self):
+    def test_reservation_form_shows_required_errors_for_an_empty_post(self):
+        response = self.client.post(reverse("reservation-form"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This field is required.", count=4)
+        self.assertFalse(Customer.objects.exists())
+        self.assertFalse(Reservation.objects.exists())
+
+    def test_reservation_form_skips_already_reserved_table(self):
         reserved_table = Table.objects.create(table_number=1, capacity=2)
         available_table = Table.objects.create(table_number=2, capacity=2)
         slot = self.create_sample_slot()
@@ -137,18 +169,36 @@ class ReservationViewTests(TestCase):
             table=reserved_table,
         )
 
-        self.client.post(reverse("reservation-sample-create"))
+        self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
 
         reservation = Reservation.objects.get(customer__name="Alice")
         self.assertEqual(reservation.table, available_table)
 
-    def test_sample_reservation_create_does_not_create_table_when_full(self):
-        self.create_sample_slot()
+    def test_reservation_form_shows_error_when_no_suitable_table_exists(self):
+        slot = self.create_sample_slot()
 
-        response = self.client.post(reverse("reservation-sample-create"))
+        response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
 
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No suitable table is available.")
         self.assertEqual(Table.objects.count(), 0)
+        self.assertFalse(Customer.objects.exists())
         self.assertFalse(Reservation.objects.exists())
 
     def test_reservation_detail_shows_existing_reservation(self):
