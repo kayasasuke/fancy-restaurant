@@ -1,0 +1,14 @@
+{% extends "FancyRestaurantApp/base.html" %}
+
+{% block title %}Restaurant Tables{% endblock %}
+
+{% block content %}
+    <h2>Restaurant Tables</h2>
+    <ul>
+        {% for table in tables %}
+            <li>Table {{ table.table_number }}: {{ table.capacity }} seats</li>
+        {% empty %}
+            <li>No tables are available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

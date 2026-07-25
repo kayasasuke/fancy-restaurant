@@ -1,0 +1,13 @@
+{% extends "FancyRestaurantApp/base.html" %}
+
+{% block title %}New Reservation{% endblock %}
+
+{% block content %}
+    <h2>Reservation Form</h2>
+    <p>This is a placeholder form page for Exercise 6.</p>
+    <p>Current sample values: Alice, 2 guests, 2026-08-01, 18:00.</p>
+    <form method="post" action="{% url 'reservation-sample-create' %}">
+        {% csrf_token %}
+        <button type="submit">Create the sample reservation</button>
+    </form>
+{% endblock %}

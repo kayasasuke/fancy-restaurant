@@ -1,0 +1,14 @@
+{% extends "FancyRestaurantApp/base.html" %}
+
+{% block title %}Reservation Time Slots{% endblock %}
+
+{% block content %}
+    <h2>Reservation Time Slots</h2>
+    <ul>
+        {% for slot in slots %}
+            <li>{{ slot.start_time|time:"H:i" }}</li>
+        {% empty %}
+            <li>No time slots are available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -54,7 +54,9 @@ class ReservationViewTests(TestCase):
         response = self.client.get(reverse("home"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/home.html")
         self.assertContains(response, "Fancy Restaurant Reservations")
+        self.assertContains(response, "Fancy Restaurant Reservation System")
 
     def test_table_list_shows_tables(self):
         Table.objects.create(table_number=3, capacity=4)
@@ -62,6 +64,7 @@ class ReservationViewTests(TestCase):
         response = self.client.get(reverse("table-list"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/table_list.html")
         self.assertContains(response, "Table 3: 4 seats")
 
     def test_time_slot_list_shows_slots(self):
@@ -70,12 +73,14 @@ class ReservationViewTests(TestCase):
         response = self.client.get(reverse("time-slot-list"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/time_slot_list.html")
         self.assertContains(response, "18:00")
 
     def test_reservation_form_placeholder_is_callable(self):
         response = self.client.get(reverse("reservation-form"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/reservation_form.html")
         self.assertContains(response, "Reservation Form")
         self.assertContains(response, 'method="post"')
 
@@ -161,6 +166,7 @@ class ReservationViewTests(TestCase):
         response = self.client.get(reverse("reservation-detail", args=[reservation.id]))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/reservation_detail.html")
         self.assertContains(response, "Customer: Alice")
         self.assertContains(response, "Date: 2026-08-01")
         self.assertContains(response, "Table: 1")
