@@ -1,0 +1,55 @@
+[
+  {
+    "model": "reservations.table",
+    "pk": 1,
+    "fields": {
+      "table_number": 1,
+      "capacity": 2
+    }
+  },
+  {
+    "model": "reservations.table",
+    "pk": 2,
+    "fields": {
+      "table_number": 2,
+      "capacity": 2
+    }
+  },
+  {
+    "model": "reservations.table",
+    "pk": 3,
+    "fields": {
+      "table_number": 3,
+      "capacity": 4
+    }
+  },
+  {
+    "model": "reservations.table",
+    "pk": 4,
+    "fields": {
+      "table_number": 4,
+      "capacity": 6
+    }
+  },
+  {
+    "model": "reservations.timeslot",
+    "pk": 1,
+    "fields": {
+      "start_time": "18:00:00"
+    }
+  },
+  {
+    "model": "reservations.timeslot",
+    "pk": 2,
+    "fields": {
+      "start_time": "19:00:00"
+    }
+  },
+  {
+    "model": "reservations.timeslot",
+    "pk": 3,
+    "fields": {
+      "start_time": "20:00:00"
+    }
+  }
+]
