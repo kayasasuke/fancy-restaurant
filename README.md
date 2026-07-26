@@ -130,6 +130,7 @@ uv sync
 uv run python manage.py check
 uv run python manage.py makemigrations reservations
 uv run python manage.py migrate
+uv run python manage.py loaddata initial_restaurant_data
 uv run python manage.py test reservations
 uv run pytest
 ```

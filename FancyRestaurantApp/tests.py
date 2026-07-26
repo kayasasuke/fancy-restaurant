@@ -1,6 +1,7 @@
 from datetime import date, time
 from importlib import import_module
 
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -8,6 +9,16 @@ from .models import Customer, Reservation, Table, TimeSlot
 
 
 class ReservationModelTests(TestCase):
+    def test_initial_restaurant_data_fixture_loads_tables_and_time_slots(self):
+        call_command("loaddata", "initial_restaurant_data", verbosity=0)
+
+        self.assertEqual(Table.objects.filter(capacity=2).count(), 4)
+        self.assertEqual(Table.objects.filter(capacity=4).count(), 6)
+        self.assertEqual(Table.objects.filter(capacity=6).count(), 6)
+        self.assertEqual(TimeSlot.objects.count(), 11)
+        self.assertTrue(TimeSlot.objects.filter(start_time=time(12, 0)).exists())
+        self.assertTrue(TimeSlot.objects.filter(start_time=time(22, 0)).exists())
+
     def test_data_migration_rejects_customer_names_longer_than_twenty_characters(self):
         migration = import_module(
             "FancyRestaurantApp.migrations.0003_simplify_reservation_schema"
