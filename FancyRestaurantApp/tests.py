@@ -76,6 +76,12 @@ class CustomerAuthenticationTests(TestCase):
         self.assertContains(response, "FancyRestaurantApp/style.css")
         self.assertContains(response, "FancyRestaurantApp/htmx.min.js")
 
+    def test_navigation_hides_internal_table_and_time_slot_lists(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertNotContains(response, 'href="/tables/"')
+        self.assertNotContains(response, 'href="/time-slots/"')
+
     def test_registration_creates_hashed_customer_and_authenticates_session(self):
         session = self.client.session
         session["visitor"] = "anonymous"

@@ -12,8 +12,6 @@
     <header>
         <h1><a href="{% url 'home' %}">Fancy Restaurant Reservations</a></h1>
         <nav aria-label="Main navigation">
-            <a href="{% url 'table-list' %}">Tables</a>
-            <a href="{% url 'time-slot-list' %}">Time slots</a>
             <a href="{% url 'reservation-form' %}">New reservation</a>
             {% if request.session.authorized_customer_login %}
                 <a href="{% url 'my-reservations' %}">My reservations</a>
