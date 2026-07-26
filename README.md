@@ -141,3 +141,43 @@ uv run python manage.py loaddata initial_restaurant_data
 uv run python manage.py test reservations
 uv run pytest
 ```
+
+## Deployment (Exercise 11)
+
+The production deployment target is Render. It runs the Django WSGI application with Waitress, uses WhiteNoise to serve collected CSS and JavaScript, and provisions a Render PostgreSQL database. The repository's `render.yaml` defines the web service and database. Render automatically provides `uv` when the repository root contains `uv.lock`.
+
+### Production Configuration
+
+Production values are environment variables. Never commit a real secret key or database URL.
+
+| Variable | Production value |
+| --- | --- |
+| `SECRET_KEY` | A generated, private Django secret key. Render generates this from `render.yaml`. |
+| `DEBUG` | `false` |
+| `ALLOWED_HOSTS` | The public hostname, for example `.onrender.com`. |
+| `DATABASE_URL` | The Render PostgreSQL connection string, supplied from the managed database. |
+| `SECURE_SSL_REDIRECT` | Normally omitted so HTTPS redirection is enabled. Set to `false` only for the local HTTP production check. |
+
+When `DEBUG` is `false`, Django refuses to start with the development secret key or without `ALLOWED_HOSTS`. Local development defaults to `DEBUG=true`, `localhost`/`127.0.0.1`, and SQLite at `db.sqlite3`. The restaurant time zone is `Asia/Tokyo`.
+
+The application does not accept uploaded files or images, so no media-file storage or media server is configured. CSS and JavaScript are application static files and are collected into `staticfiles/` for WhiteNoise.
+
+### Local Production Check
+
+Install the locked dependencies, collect static files, migrate the local database, and start Waitress with explicit production-like settings:
+
+```bash
+uv sync --frozen
+SECRET_KEY=replace-with-a-private-value DEBUG=false ALLOWED_HOSTS=127.0.0.1 SECURE_SSL_REDIRECT=false uv run python manage.py collectstatic --noinput
+SECRET_KEY=replace-with-a-private-value DEBUG=false ALLOWED_HOSTS=127.0.0.1 SECURE_SSL_REDIRECT=false uv run python manage.py migrate
+SECRET_KEY=replace-with-a-private-value DEBUG=false ALLOWED_HOSTS=127.0.0.1 SECURE_SSL_REDIRECT=false uv run waitress-serve --listen=127.0.0.1:8000 FancyRestaurant.wsgi:application
+```
+
+### Render Deployment
+
+1. Push the repository to GitHub and create a Render Blueprint from `render.yaml`.
+2. Allow Render to create the `fancy-restaurant` web service and `fancy-restaurant-db` PostgreSQL database.
+3. Render runs `uv sync --frozen` and `collectstatic` during the build, then runs migrations with `preDeployCommand` before starting Waitress on the platform-provided `$PORT`.
+4. After deployment, open the Render URL and verify the home page, registration, login, reservation form, and static stylesheet.
+
+Render owns the generated `SECRET_KEY` and database connection string. Render terminates HTTPS before forwarding requests to Waitress; Django trusts that proxy header, redirects HTTP to HTTPS, and marks session and CSRF cookies secure. Set an explicit custom hostname in `ALLOWED_HOSTS` before using a custom domain.
