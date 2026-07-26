@@ -116,6 +116,7 @@ Later work can add richer availability checks and nearby-time suggestions.
 ## Development Environment
 
 - Python 3.10.4
+- Restaurant time zone: `Asia/Tokyo`
 - uv
 - Git
 - GitHub

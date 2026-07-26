@@ -3,6 +3,7 @@ from importlib import import_module
 from unittest.mock import patch
 
 from django.contrib.auth.hashers import check_password, make_password
+from django.conf import settings
 from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -555,9 +556,16 @@ class ReservationDateValidationTests(TestCase):
     def create_sample_slot(self):
         return TimeSlot.objects.create(start_time=time(18, 0))
 
+    def test_restaurant_uses_tokyo_time_zone(self):
+        self.assertEqual(settings.TIME_ZONE, "Asia/Tokyo")
+
     @patch("django.utils.timezone.localdate", return_value=date(2026, 8, 1))
+    @patch(
+        "django.utils.timezone.localtime",
+        return_value=datetime(2026, 8, 1, 17, 59, tzinfo=timezone.utc),
+    )
     def test_reservation_form_rejects_past_date_and_accepts_today_and_future_date(
-        self, _mocked_localdate
+        self, _mocked_localtime, _mocked_localdate
     ):
         Table.objects.create(table_number=1, capacity=2)
         slot = self.create_sample_slot()
