@@ -8,6 +8,7 @@
 - [x] 2.1 Display signed-in navigation state and prefill the reservation name.
 - [x] 2.2 Assign authenticated reservations to the existing customer server-side.
 - [x] 2.3 Add the authenticated customer's reservation-list page.
+- [x] 2.4 Reject reservation dates before the local current date in form and availability validation.
 
 ## 3. Documentation And Verification
 

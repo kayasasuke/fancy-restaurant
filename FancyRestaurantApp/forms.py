@@ -1,5 +1,12 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
+from django.utils import timezone
+
+
+def validate_reservation_date(reservation_date):
+    if reservation_date < timezone.localdate():
+        raise forms.ValidationError("Reservation date cannot be in the past.")
+    return reservation_date
 
 
 class RegistrationForm(forms.Form):
@@ -49,6 +56,9 @@ class ReservationForm(forms.Form):
 
     def __init__(self, *args, time_slots, customer=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["reservation_date"].widget.attrs[
+            "min"
+        ] = timezone.localdate().isoformat()
         self.fields["time_slot"].choices = [
             (str(slot.pk), str(slot)) for slot in time_slots
         ]
@@ -64,6 +74,9 @@ class ReservationForm(forms.Form):
             self.fields["customer_name"].initial = customer.name
             self.fields["customer_name"].widget.attrs["readonly"] = True
 
+    def clean_reservation_date(self):
+        return validate_reservation_date(self.cleaned_data["reservation_date"])
+
 
 class AvailabilityForm(forms.Form):
     guest_count = forms.IntegerField(min_value=1)
@@ -75,3 +88,6 @@ class AvailabilityForm(forms.Form):
         self.fields["time_slot"].choices = [
             (str(slot.pk), str(slot)) for slot in time_slots
         ]
+
+    def clean_reservation_date(self):
+        return validate_reservation_date(self.cleaned_data["reservation_date"])

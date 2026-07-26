@@ -1,5 +1,6 @@
 from datetime import date, time
 from importlib import import_module
+from unittest.mock import patch
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.management import call_command
@@ -548,3 +549,67 @@ class ReservationViewTests(TestCase):
         response = self.client.get(reverse("reservation-detail", args=[999]))
 
         self.assertEqual(response.status_code, 404)
+
+
+class ReservationDateValidationTests(TestCase):
+    def create_sample_slot(self):
+        return TimeSlot.objects.create(start_time=time(18, 0))
+
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 8, 1))
+    def test_reservation_form_rejects_past_date_and_accepts_today_and_future_date(
+        self, _mocked_localdate
+    ):
+        Table.objects.create(table_number=1, capacity=2)
+        slot = self.create_sample_slot()
+
+        past_response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-07-31",
+                "time_slot": slot.id,
+            },
+        )
+        today_response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-01",
+                "time_slot": slot.id,
+            },
+        )
+        future_response = self.client.post(
+            reverse("reservation-form"),
+            {
+                "customer_name": "Alice",
+                "guest_count": 2,
+                "reservation_date": "2026-08-02",
+                "time_slot": slot.id,
+            },
+        )
+
+        self.assertEqual(past_response.status_code, 200)
+        self.assertContains(past_response, "Reservation date cannot be in the past.")
+        self.assertRedirects(today_response, reverse("reservation-detail", args=[1]))
+        self.assertRedirects(future_response, reverse("reservation-detail", args=[2]))
+        self.assertEqual(Reservation.objects.count(), 2)
+
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 8, 1))
+    def test_reservation_availability_rejects_past_date(self, _mocked_localdate):
+        Table.objects.create(table_number=1, capacity=2)
+        slot = self.create_sample_slot()
+
+        response = self.client.post(
+            reverse("reservation-availability"),
+            {
+                "guest_count": 2,
+                "reservation_date": "2026-07-31",
+                "time_slot": slot.id,
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.strip(), b"")

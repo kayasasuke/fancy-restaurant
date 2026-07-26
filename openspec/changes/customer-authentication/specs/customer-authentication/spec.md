@@ -47,3 +47,14 @@ The system SHALL show an authenticated customer only the reservations assigned t
 #### Scenario: Anonymous visitor opens the reservation list
 - **WHEN** an anonymous visitor requests the reservation-list URL
 - **THEN** the system redirects them to the login page
+
+### Requirement: Reservation date is not in the past
+The system SHALL reject a reservation date before the server's local current date.
+
+#### Scenario: Customer submits a past reservation date
+- **WHEN** a customer submits a reservation date before today
+- **THEN** the reservation form shows a validation error and creates no reservation
+
+#### Scenario: Availability is checked for a past reservation date
+- **WHEN** the availability endpoint receives a reservation date before today
+- **THEN** it returns no availability result
