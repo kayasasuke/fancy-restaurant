@@ -42,6 +42,22 @@ def test_production_settings_accept_environment_configuration():
     assert result.returncode == 0
 
 
+def test_render_can_disable_django_https_redirect():
+    result = run_production_command(
+        "manage.py",
+        "shell",
+        "-c",
+        "from django.conf import settings; print(settings.SECURE_SSL_REDIRECT)",
+        DEBUG="false",
+        ALLOWED_HOSTS="example.com",
+        SECRET_KEY="test-production-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz",
+        SECURE_SSL_REDIRECT="false",
+    )
+
+    assert result.returncode == 0
+    assert "False" in result.stdout
+
+
 def test_production_settings_accept_postgresql_database_url():
     result = run_production_command(
         "manage.py",
