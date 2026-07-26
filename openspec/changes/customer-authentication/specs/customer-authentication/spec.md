@@ -48,8 +48,8 @@ The system SHALL show an authenticated customer only the reservations assigned t
 - **WHEN** an anonymous visitor requests the reservation-list URL
 - **THEN** the system redirects them to the login page
 
-### Requirement: Reservation date is not in the past
-The system SHALL reject a reservation date before the server's local current date.
+### Requirement: Reservation date and time are not in the past
+The system SHALL reject a reservation date before the server's local current date and a time slot that has already begun today.
 
 #### Scenario: Customer submits a past reservation date
 - **WHEN** a customer submits a reservation date before today
@@ -57,4 +57,12 @@ The system SHALL reject a reservation date before the server's local current dat
 
 #### Scenario: Availability is checked for a past reservation date
 - **WHEN** the availability endpoint receives a reservation date before today
+- **THEN** it returns no availability result
+
+#### Scenario: Customer submits an elapsed time slot today
+- **WHEN** a customer submits today's time slot at or before the server's current local time
+- **THEN** the reservation form shows a validation error and creates no reservation
+
+#### Scenario: Availability is checked for an elapsed time slot today
+- **WHEN** the availability endpoint receives today's time slot at or before the server's current local time
 - **THEN** it returns no availability result

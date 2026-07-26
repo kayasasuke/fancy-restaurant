@@ -9,6 +9,14 @@ def validate_reservation_date(reservation_date):
     return reservation_date
 
 
+def validate_reservation_time(reservation_date, start_time):
+    if (
+        reservation_date == timezone.localdate()
+        and start_time <= timezone.localtime().time()
+    ):
+        raise forms.ValidationError("Reservation time must be in the future.")
+
+
 class RegistrationForm(forms.Form):
     name = forms.CharField(label="Name", max_length=20)
     login = forms.CharField(label="Login", max_length=20)
@@ -56,11 +64,12 @@ class ReservationForm(forms.Form):
 
     def __init__(self, *args, time_slots, customer=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.time_slots = {str(slot.pk): slot for slot in time_slots}
         self.fields["reservation_date"].widget.attrs[
             "min"
         ] = timezone.localdate().isoformat()
         self.fields["time_slot"].choices = [
-            (str(slot.pk), str(slot)) for slot in time_slots
+            (slot_id, str(slot)) for slot_id, slot in self.time_slots.items()
         ]
         for field_name in ("guest_count", "reservation_date", "time_slot"):
             self.fields[field_name].widget.attrs.update(
@@ -77,6 +86,17 @@ class ReservationForm(forms.Form):
     def clean_reservation_date(self):
         return validate_reservation_date(self.cleaned_data["reservation_date"])
 
+    def clean(self):
+        cleaned_data = super().clean()
+        reservation_date = cleaned_data.get("reservation_date")
+        time_slot = self.time_slots.get(cleaned_data.get("time_slot"))
+        if reservation_date and time_slot:
+            try:
+                validate_reservation_time(reservation_date, time_slot.start_time)
+            except forms.ValidationError as error:
+                self.add_error("time_slot", error)
+        return cleaned_data
+
 
 class AvailabilityForm(forms.Form):
     guest_count = forms.IntegerField(min_value=1)
@@ -85,9 +105,21 @@ class AvailabilityForm(forms.Form):
 
     def __init__(self, *args, time_slots, **kwargs):
         super().__init__(*args, **kwargs)
+        self.time_slots = {str(slot.pk): slot for slot in time_slots}
         self.fields["time_slot"].choices = [
-            (str(slot.pk), str(slot)) for slot in time_slots
+            (slot_id, str(slot)) for slot_id, slot in self.time_slots.items()
         ]
 
     def clean_reservation_date(self):
         return validate_reservation_date(self.cleaned_data["reservation_date"])
+
+    def clean(self):
+        cleaned_data = super().clean()
+        reservation_date = cleaned_data.get("reservation_date")
+        time_slot = self.time_slots.get(cleaned_data.get("time_slot"))
+        if reservation_date and time_slot:
+            try:
+                validate_reservation_time(reservation_date, time_slot.start_time)
+            except forms.ValidationError as error:
+                self.add_error("time_slot", error)
+        return cleaned_data

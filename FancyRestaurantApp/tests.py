@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time, timezone
 from importlib import import_module
 from unittest.mock import patch
 
@@ -610,6 +610,85 @@ class ReservationDateValidationTests(TestCase):
             },
             HTTP_HX_REQUEST="true",
         )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.strip(), b"")
+
+    def test_reservation_form_rejects_elapsed_time_slot_today(self):
+        Table.objects.create(table_number=1, capacity=2)
+        before_slot = TimeSlot.objects.create(start_time=time(17, 59))
+        current_slot = TimeSlot.objects.create(start_time=time(18, 0))
+        future_slot = TimeSlot.objects.create(start_time=time(18, 1))
+
+        with (
+            patch("django.utils.timezone.localdate", return_value=date(2026, 8, 1)),
+            patch(
+                "django.utils.timezone.localtime",
+                return_value=datetime(2026, 8, 1, 18, 0, tzinfo=timezone.utc),
+            ),
+        ):
+            before_response = self.client.post(
+                reverse("reservation-form"),
+                {
+                    "customer_name": "Alice",
+                    "guest_count": 2,
+                    "reservation_date": "2026-08-01",
+                    "time_slot": before_slot.id,
+                },
+            )
+            current_response = self.client.post(
+                reverse("reservation-form"),
+                {
+                    "customer_name": "Alice",
+                    "guest_count": 2,
+                    "reservation_date": "2026-08-01",
+                    "time_slot": current_slot.id,
+                },
+            )
+            future_response = self.client.post(
+                reverse("reservation-form"),
+                {
+                    "customer_name": "Alice",
+                    "guest_count": 2,
+                    "reservation_date": "2026-08-01",
+                    "time_slot": future_slot.id,
+                },
+            )
+            tomorrow_response = self.client.post(
+                reverse("reservation-form"),
+                {
+                    "customer_name": "Alice",
+                    "guest_count": 2,
+                    "reservation_date": "2026-08-02",
+                    "time_slot": current_slot.id,
+                },
+            )
+
+        self.assertContains(before_response, "Reservation time must be in the future.")
+        self.assertContains(current_response, "Reservation time must be in the future.")
+        self.assertRedirects(future_response, reverse("reservation-detail", args=[1]))
+        self.assertRedirects(tomorrow_response, reverse("reservation-detail", args=[2]))
+
+    def test_reservation_availability_rejects_elapsed_time_slot_today(self):
+        Table.objects.create(table_number=1, capacity=2)
+        slot = self.create_sample_slot()
+
+        with (
+            patch("django.utils.timezone.localdate", return_value=date(2026, 8, 1)),
+            patch(
+                "django.utils.timezone.localtime",
+                return_value=datetime(2026, 8, 1, 18, 0, tzinfo=timezone.utc),
+            ),
+        ):
+            response = self.client.post(
+                reverse("reservation-availability"),
+                {
+                    "guest_count": 2,
+                    "reservation_date": "2026-08-01",
+                    "time_slot": slot.id,
+                },
+                HTTP_HX_REQUEST="true",
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content.strip(), b"")
