@@ -12,6 +12,8 @@ services:
         value: "false"
       - key: ALLOWED_HOSTS
         value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://fancy-restaurant.onrender.com
       - key: SECURE_SSL_REDIRECT
         value: "false"
       - key: DATABASE_URL

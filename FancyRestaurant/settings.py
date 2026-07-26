@@ -43,6 +43,11 @@ ALLOWED_HOSTS = (
     if allowed_hosts
     else ["localhost", "127.0.0.1"]
 )
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
 if not DEBUG and SECRET_KEY == DEVELOPMENT_SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY must be set when DEBUG is false.")

@@ -58,6 +58,22 @@ def test_render_can_disable_django_https_redirect():
     assert "False" in result.stdout
 
 
+def test_production_settings_accept_csrf_trusted_origins():
+    result = run_production_command(
+        "manage.py",
+        "shell",
+        "-c",
+        "from django.conf import settings; print(','.join(settings.CSRF_TRUSTED_ORIGINS))",
+        DEBUG="false",
+        ALLOWED_HOSTS="example.com",
+        CSRF_TRUSTED_ORIGINS="https://fancy-restaurant.onrender.com",
+        SECRET_KEY="test-production-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz",
+    )
+
+    assert result.returncode == 0
+    assert "https://fancy-restaurant.onrender.com" in result.stdout
+
+
 def test_production_settings_accept_postgresql_database_url():
     result = run_production_command(
         "manage.py",
