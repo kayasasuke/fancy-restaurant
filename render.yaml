@@ -3,7 +3,7 @@ services:
     name: fancy-restaurant
     runtime: python
     buildCommand: uv sync --frozen && uv run python manage.py collectstatic --noinput
-    preDeployCommand: uv run python manage.py migrate
+    preDeployCommand: uv run python manage.py migrate && uv run python manage.py loaddata initial_restaurant_data
     startCommand: uv run waitress-serve --host=0.0.0.0 --port=$PORT FancyRestaurant.wsgi:application
     envVars:
       - key: SECRET_KEY
