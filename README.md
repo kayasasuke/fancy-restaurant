@@ -155,6 +155,7 @@ Production values are environment variables. Never commit a real secret key or d
 | `SECRET_KEY` | A generated, private Django secret key. Render generates this from `render.yaml`. |
 | `DEBUG` | `false` |
 | `ALLOWED_HOSTS` | The public hostname, for example `.onrender.com`. |
+| `CSRF_TRUSTED_ORIGINS` | Comma-separated HTTPS origins permitted to send form POSTs, for example `https://fancy-restaurant.onrender.com`. |
 | `DATABASE_URL` | The Render PostgreSQL connection string, supplied from the managed database. |
 | `SECURE_SSL_REDIRECT` | `false` on Render because Render performs the HTTPS redirect at its edge. Set to `false` for the local HTTP production check as well. |
 
@@ -180,4 +181,4 @@ SECRET_KEY=replace-with-a-private-value DEBUG=false ALLOWED_HOSTS=127.0.0.1 SECU
 3. Render runs `uv sync --frozen` and `collectstatic` during the build, then runs migrations with `preDeployCommand` before starting Waitress on the platform-provided `$PORT`.
 4. After deployment, open the Render URL and verify the home page, registration, login, reservation form, and static stylesheet.
 
-Render owns the generated `SECRET_KEY` and database connection string. Render terminates HTTPS and performs HTTP-to-HTTPS redirects before forwarding requests to Waitress; Django trusts that proxy header and marks session and CSRF cookies secure. Set an explicit custom hostname in `ALLOWED_HOSTS` before using a custom domain.
+Render owns the generated `SECRET_KEY` and database connection string. Render terminates HTTPS and performs HTTP-to-HTTPS redirects before forwarding requests to Waitress; Django trusts that proxy header and marks session and CSRF cookies secure. Add a custom HTTPS domain to both `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` before using it.
