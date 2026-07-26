@@ -14,6 +14,7 @@ from .models import Customer, Reservation, Table, TimeSlot
 class ReservationModelTests(TestCase):
     def test_initial_restaurant_data_fixture_loads_tables_and_time_slots(self):
         call_command("loaddata", "initial_restaurant_data", verbosity=0)
+        call_command("loaddata", "initial_restaurant_data", verbosity=0)
 
         self.assertEqual(Table.objects.filter(capacity=2).count(), 4)
         self.assertEqual(Table.objects.filter(capacity=4).count(), 6)
