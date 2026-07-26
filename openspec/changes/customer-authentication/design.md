@@ -10,6 +10,7 @@ The instructor project uses custom patient registration and login forms, hashes 
 - Store only `authorized_customer_login` in the session. On each use, resolve the current `Customer`; clear stale session state when it no longer resolves.
 - Add `LoginForm`, `registration`, `login`, and POST-only `logout` views. Successful registration and login redirect to the home page.
 - Pass the authenticated customer into `ReservationForm` to display a read-only name, but choose the authenticated customer server-side when creating a reservation.
+- Show only the authenticated customer's reservations at a dedicated URL; redirect anonymous visitors to login.
 - Existing guest bookings remain guest records. A customer must register to use future authenticated bookings; name matching alone is not a safe account migration method.
 
 ## Non-Goals

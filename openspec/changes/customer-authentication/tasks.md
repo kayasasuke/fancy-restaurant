@@ -7,6 +7,7 @@
 
 - [x] 2.1 Display signed-in navigation state and prefill the reservation name.
 - [x] 2.2 Assign authenticated reservations to the existing customer server-side.
+- [x] 2.3 Add the authenticated customer's reservation-list page.
 
 ## 3. Documentation And Verification
 

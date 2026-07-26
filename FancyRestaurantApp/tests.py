@@ -290,6 +290,46 @@ class ReservationViewTests(TestCase):
         self.assertEqual(reservation.customer, customer)
         self.assertEqual(Customer.objects.count(), 1)
 
+    def test_my_reservations_shows_only_authenticated_customer_reservations(self):
+        customer = Customer.objects.create(name="Alice", login="alice", password="hash")
+        other_customer = Customer.objects.create(
+            name="Bob", login="bob", password="hash"
+        )
+        table = Table.objects.create(table_number=1, capacity=2)
+        slot = self.create_sample_slot()
+        reservation = Reservation.objects.create(
+            customer=customer,
+            reservation_date=date(2026, 8, 1),
+            time_slot=slot,
+            guest_count=2,
+            table=table,
+        )
+        Reservation.objects.create(
+            customer=other_customer,
+            reservation_date=date(2026, 8, 2),
+            time_slot=slot,
+            guest_count=2,
+            table=table,
+        )
+        session = self.client.session
+        session["authorized_customer_login"] = customer.login
+        session.save()
+
+        response = self.client.get(reverse("my-reservations"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "FancyRestaurantApp/my_reservations.html")
+        self.assertContains(response, "2026-08-01")
+        self.assertContains(
+            response, reverse("reservation-detail", args=[reservation.id])
+        )
+        self.assertNotContains(response, "2026-08-02")
+
+    def test_my_reservations_redirects_anonymous_visitor_to_login(self):
+        response = self.client.get(reverse("my-reservations"))
+
+        self.assertRedirects(response, reverse("login"))
+
     def test_reservation_availability_shows_smallest_available_table(self):
         Table.objects.create(table_number=1, capacity=4)
         suitable_table = Table.objects.create(table_number=2, capacity=2)

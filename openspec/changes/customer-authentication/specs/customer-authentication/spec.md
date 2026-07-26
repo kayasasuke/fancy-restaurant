@@ -36,3 +36,14 @@ The system SHALL assign a new reservation to the authenticated customer rather t
 #### Scenario: Authenticated customer submits a valid reservation
 - **WHEN** an authenticated customer submits a valid reservation
 - **THEN** the system creates the reservation for the authenticated customer and creates no new customer
+
+### Requirement: Authenticated customer can view their reservations
+The system SHALL show an authenticated customer only the reservations assigned to their customer record.
+
+#### Scenario: Authenticated customer opens their reservation list
+- **WHEN** an authenticated customer requests the reservation-list URL
+- **THEN** the system returns their reservations ordered by date and time
+
+#### Scenario: Anonymous visitor opens the reservation list
+- **WHEN** an anonymous visitor requests the reservation-list URL
+- **THEN** the system redirects them to the login page

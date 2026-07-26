@@ -142,6 +142,23 @@ def reservation_form(request):
     return render(request, "FancyRestaurantApp/reservation_form.html", {"form": form})
 
 
+def my_reservations(request):
+    customer = authenticated_customer(request)
+    if customer is None:
+        return redirect("login")
+
+    reservations = (
+        Reservation.objects.filter(customer=customer)
+        .select_related("table", "time_slot")
+        .order_by("reservation_date", "time_slot__start_time")
+    )
+    return render(
+        request,
+        "FancyRestaurantApp/my_reservations.html",
+        {"reservations": reservations},
+    )
+
+
 def reservation_availability(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
