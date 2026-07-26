@@ -1,4 +1,41 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
+
+
+class RegistrationForm(forms.Form):
+    name = forms.CharField(label="Name", max_length=20)
+    login = forms.CharField(label="Login", max_length=20)
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(),
+    )
+    password_confirmation = forms.CharField(
+        label="Password confirmation",
+        widget=forms.PasswordInput(),
+    )
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        validate_password(password)
+        return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if (
+            cleaned_data.get("password")
+            and cleaned_data.get("password_confirmation")
+            and cleaned_data["password"] != cleaned_data["password_confirmation"]
+        ):
+            self.add_error("password_confirmation", "Passwords do not match.")
+        return cleaned_data
+
+
+class LoginForm(forms.Form):
+    login = forms.CharField(label="Login", max_length=20)
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(),
+    )
 
 
 class ReservationForm(forms.Form):
@@ -10,7 +47,7 @@ class ReservationForm(forms.Form):
     )
     time_slot = forms.ChoiceField(label="Time slot")
 
-    def __init__(self, *args, time_slots, **kwargs):
+    def __init__(self, *args, time_slots, customer=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["time_slot"].choices = [
             (str(slot.pk), str(slot)) for slot in time_slots
@@ -23,6 +60,9 @@ class ReservationForm(forms.Form):
                     "hx-include": "closest form",
                 }
             )
+        if customer is not None:
+            self.fields["customer_name"].initial = customer.name
+            self.fields["customer_name"].widget.attrs["readonly"] = True
 
 
 class AvailabilityForm(forms.Form):

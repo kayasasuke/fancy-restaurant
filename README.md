@@ -24,7 +24,7 @@ Users can enter the number of guests, choose a desired date and time slot, and c
 
 ## Basic Data Model Idea
 
-- Customers store a name, login name, and password value. Login processing is introduced in a later exercise.
+- Customers store a name, unique login name, and password hash. Registered customers can authenticate with their login name and password.
 - Tables have a table number and seating capacity.
 - Time slots represent reusable reservation start times.
 - Reservations connect one customer, reservation date, time slot, guest count, and assigned table.
@@ -44,17 +44,19 @@ The `reservations` app defines these Django models:
 
 Each model implements `__str__()` so records are readable in Django admin.
 
-## Exercise 10 HTMX Availability Check
+## Customer Authentication
 
-Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. A later login exercise will keep the authenticated customer's login identifier in the browser session; it will not store reservation, table, or time-slot data there. Exercise 8 accepts a guest name directly, so it does not introduce session state.
+Persistent, shared restaurant data stays in the database: `Customer`, `Table`, `TimeSlot`, and `Reservation` records. Authentication keeps only the registered customer's login identifier in the browser session; reservation, table, and time-slot data remain in the database.
 
 All current HTML pages share the `FancyRestaurantApp/base.html` layout. The base template contains the restaurant header, navigation menu, main-content area, and footer. Home, table list, time-slot list, reservation form, and reservation detail templates inherit that layout.
 
-Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid submission creates a guest `Customer` with an empty login and password (matching the instructor example's guest reservation approach) and assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Login, HTMX, alternative-time suggestions, and concurrent booking protection remain later exercises.
+Exercise 8 adds one Django `ReservationForm`. It accepts a guest name, guest count, date, and one of the time slots currently stored in the database. A valid guest submission creates a `Customer` with an empty login and password (matching the instructor example's guest reservation approach); a logged-in submission reuses the authenticated customer. The form assigns the smallest unoccupied existing table that fits the party. Invalid input and an unavailable table are shown again on the form. Alternative-time suggestions and concurrent booking protection remain later exercises.
 
 Exercise 9 adds one external stylesheet at `FancyRestaurantApp/static/FancyRestaurantApp/style.css`. The shared template loads it for every page and includes a viewport declaration. The CSS keeps the existing semantic header, navigation, main content, footer, labels, controls, and buttons; it adds a restrained responsive layout, visible keyboard focus, and readable validation-error styling. Images and interface redesign remain outside this exercise.
 
 Exercise 10 adds one HTMX interaction to the reservation form. When the guest count, date, or time slot changes, the browser sends the complete form data to a read-only availability URL and replaces only the form's availability-result region. The response identifies the smallest suitable unoccupied table, reports that no table is suitable, or remains empty while the relevant input is incomplete. The final reservation submission remains the normal form POST and redirect workflow.
+
+Registered customers can create an account, log in, and log out. Passwords are stored as Django password hashes, and the session stores only the authenticated login. A logged-in customer uses their existing `Customer` record for new reservations; guest bookings remain separate records and are not converted automatically by name.
 
 ### Migration Note
 
@@ -94,11 +96,14 @@ flowchart LR
 
 ## Current URL API
 
-The current Exercise 10 views are intentionally simple function-based views. The reservation form accepts basic user input and redirects to a detail page after a successful booking; HTMX adds a separate read-only availability query.
+The current views are intentionally simple function-based views. The reservation form accepts basic user input and redirects to a detail page after a successful booking; HTMX adds a separate read-only availability query and registered customers can authenticate with session-backed login.
 
 | URL | View name | URL arguments | Request parameters | Return value | Purpose |
 | --- | --- | --- | --- | --- | --- |
 | `/` | `home` | none | none | `200 OK` HTML | Show the home page and links to basic actions. |
+| `/register/` | `registration` | none | `GET`: none. `POST`: `name`, `login`, `password`, and `password_confirmation`. | `GET`: `200 OK` HTML. Valid `POST`: `302 Found` home. Invalid `POST`: `200 OK` HTML with errors. | Create a customer account with a hashed password and authenticate the session. |
+| `/login/` | `login` | none | `GET`: none. `POST`: `login` and `password`. | `GET`: `200 OK` HTML. Valid `POST`: `302 Found` home. Invalid `POST`: `200 OK` HTML with an error. | Authenticate a registered customer. |
+| `/logout/` | `logout` | none | `POST`: none. | `302 Found` home; `405 Method Not Allowed` for `GET`. | Clear the authenticated customer session. |
 | `/tables/` | `table-list` | none | none | `200 OK` HTML | Show restaurant tables ordered by capacity and table number. |
 | `/time-slots/` | `time-slot-list` | none | none | `200 OK` HTML | Show reservation time slots ordered by start time. |
 | `/reservations/new/` | `reservation-form` | none | `GET`: none. `POST`: `customer_name`, `guest_count`, `reservation_date` (`YYYY-MM-DD`), and `time_slot` (time-slot ID). | `GET`: `200 OK` HTML. Valid `POST`: `302 Found` to the reservation detail. Invalid or unavailable `POST`: `200 OK` HTML with errors. | Display and process the basic reservation form. A successful booking receives the smallest unoccupied existing table that fits the party. |
