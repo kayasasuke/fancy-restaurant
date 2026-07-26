@@ -12,9 +12,18 @@
     <header>
         <h1><a href="{% url 'home' %}">Fancy Restaurant Reservations</a></h1>
         <nav aria-label="Main navigation">
-            <a href="{% url 'table-list' %}">Tables</a>
-            <a href="{% url 'time-slot-list' %}">Time slots</a>
             <a href="{% url 'reservation-form' %}">New reservation</a>
+            {% if request.session.authorized_customer_login %}
+                <a href="{% url 'my-reservations' %}">My reservations</a>
+                <span>Signed in as {{ request.session.authorized_customer_login }}</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Log out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Log in</a>
+                <a href="{% url 'registration' %}">Register</a>
+            {% endif %}
         </nav>
     </header>
     <main class="content">

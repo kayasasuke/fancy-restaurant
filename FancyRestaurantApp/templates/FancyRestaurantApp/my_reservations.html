@@ -1,0 +1,22 @@
+{% extends "FancyRestaurantApp/base.html" %}
+
+{% block title %}My Reservations{% endblock %}
+
+{% block content %}
+    <h2>My Reservations</h2>
+    {% if reservations %}
+        <ul>
+            {% for reservation in reservations %}
+                <li>
+                    <a href="{% url 'reservation-detail' reservation.id %}">
+                        {{ reservation.reservation_date|date:"Y-m-d" }}
+                        {{ reservation.time_slot.start_time|time:"H:i" }}
+                        - {{ reservation.guest_count }} guests, Table {{ reservation.table.table_number }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You do not have any reservations.</p>
+    {% endif %}
+{% endblock %}

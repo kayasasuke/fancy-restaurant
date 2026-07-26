@@ -6,6 +6,15 @@ class Customer(models.Model):
     login = models.CharField(max_length=20)
     password = models.CharField(max_length=255)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["login"],
+                condition=~models.Q(login=""),
+                name="unique_nonempty_customer_login",
+            )
+        ]
+
     def __str__(self) -> str:
         return self.name
 
