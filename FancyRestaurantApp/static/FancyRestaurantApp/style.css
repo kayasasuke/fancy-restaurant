@@ -38,6 +38,7 @@ a:hover { color: var(--navy); }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 
 .brand { display: flex; align-items: center; gap: 0.8rem; color: #ffffff; text-decoration: none; }
+.brand:hover { color: #ffffff; }
 .brand-mark {
     display: grid; width: 2.35rem; height: 2.35rem; place-items: center;
     border: 1px solid rgb(255 255 255 / 40%); border-radius: 0.75rem;
