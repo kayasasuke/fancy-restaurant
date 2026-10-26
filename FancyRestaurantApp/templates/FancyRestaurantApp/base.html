@@ -9,13 +9,20 @@
     <script src="{% static 'FancyRestaurantApp/htmx.min.js' %}" defer></script>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    <header>
-        <h1><a href="{% url 'home' %}">Fancy Restaurant Reservations</a></h1>
-        <nav aria-label="Main navigation">
-            <a href="{% url 'reservation-form' %}">New reservation</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="{% url 'home' %}">
+                <span class="brand-mark" aria-hidden="true">FR</span>
+                <span class="brand-copy">
+                    <strong>Fancy Restaurant</strong>
+                    <small>Reservations</small>
+                </span>
+            </a>
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="{% url 'reservation-form' %}">New reservation</a>
             {% if request.session.authorized_customer_login %}
                 <a href="{% url 'my-reservations' %}">My reservations</a>
-                <span>Signed in as {{ request.session.authorized_customer_login }}</span>
+                <span class="signed-in-as">Signed in as {{ request.session.authorized_customer_login }}</span>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit">Log out</button>
@@ -24,13 +31,18 @@
                 <a href="{% url 'login' %}">Log in</a>
                 <a href="{% url 'registration' %}">Register</a>
             {% endif %}
-        </nav>
+            </nav>
+        </div>
     </header>
     <main class="content">
-        {% block content %}{% endblock %}
+        <section class="content-panel">
+            {% block content %}{% endblock %}
+        </section>
     </main>
-    <footer>
-        <small>Fancy Restaurant Reservation System</small>
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <small>Fancy Restaurant Reservation System</small>
+        </div>
     </footer>
 </body>
 </html>
